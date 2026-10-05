@@ -1,0 +1,221 @@
+# prices - Inditex Price Service
+
+Microservicio de precios siguiendo Arquitectura Hexagonal (Ports & Adapters) + DDD. Versión 1.0.0. Prueba Heidergger Forero Martinez
+
+## Tecnologías
+- Java 21
+- Maven 3.9+
+- Spring Boot 3.3.x
+- Spring Data JPA
+- H2 (motor embebido; en memoria por defecto)
+- Flyway
+- SpringDoc OpenAPI
+- MapStruct
+- Spring Kafka (solo productor)
+- Actuator
+
+## Perfiles
+- application-dev.yml - desarrollo (H2 en memoria por defecto)
+- application-test.yml - tests (H2 en memoria)
+- application-pro.yml - producción (H2 en memoria por defecto, ver "Base de datos")
+
+## Decisiones técnicas
+
+### Lombok declarado pero no usado
+
+Lombok figura en el `pom.xml` pero ninguna clase lo usa. Es deliberado: el
+volumen de boilerplate del proyecto es bajo, y en las clases que más se
+ganarían los getters generados no encajarían. `Price` y `Money` validan en el
+constructor y exponen métodos con nombre propio (`money()`, no `getMoney()`)
+además de lógica de negocio, así que `@Getter` no aportaría nada.
+
+
+### MapStruct no cubre todo el mapeo
+
+`PriceRestMapper` (capa adapter) usa MapStruct. `PriceApplicationMapper`
+(capa application) está escrito a mano porque debe aplanar el value object
+`Money` en dos campos (`amount` y `currency`), algo que MapStruct no resuelve
+bien. Ahí se prefirió el código explícito.
+
+### DTOs duplicados por capa
+
+`PriceByDateRestRequest` y `PriceByDateRequest` son clases distintas a propósito.
+Permite que el contrato REST cambie (por ejemplo, aceptar un `LocalDateTime`
+en vez de `ZonedDateTime`) sin arrastrar a la capa de aplicación. Es más
+código, a cambio de desacoplamiento.
+
+## Build & Test
+```bash
+mvn clean verify
+```
+
+## Ejecutar localmente
+```bash
+mvn spring-boot:run
+```
+
+## Swagger/OpenAPI
+- http://localhost:8080/swagger-ui/index.html
+- http://localhost:8080/v3/api-docs
+
+## Endpoints
+
+### GET /api/v1/prices/by-date
+Obtiene precio aplicable por fecha. Fechas inclusivas [START_DATE, END_DATE].
+
+Parámetros:
+- brandId (Integer)
+- productId (Integer)
+- applicationDate (ZonedDateTime, ISO-8601). La zona es obligatoria; no hay zona por defecto.
+
+**Ojo con el `+` del offset en una query string**: un `+` literal se decodifica como espacio, así que `2020-06-14T10:00:00+02:00` falla con 400. Usa el designador `Z` de UTC o codifica el `+` como `%2B`.
+
+Ejemplos válidos:
+```bash
+curl "http://localhost:8080/api/v1/prices/by-date?brandId=1&productId=35455&applicationDate=2020-06-14T10:00:00Z"
+curl "http://localhost:8080/api/v1/prices/by-date?brandId=1&productId=35455&applicationDate=2020-06-14T10:00:00%2B02:00"
+```
+
+### PUT /api/v1/prices
+Upsert lógico idempotente. Si clave natural (BRAND_ID,PRODUCT_ID,START_DATE,END_DATE) existe con campos distintos → UPDATE. Si idéntico → devuelve existente. Si no existe → CREATE.
+
+Ejemplo:
+```bash
+curl -X PUT "http://localhost:8080/api/v1/prices" \
+  -H "Content-Type: application/json" \
+  -d '{"brandId":1,"productId":35455,"priceList":1,"startDate":"2020-06-14T00:00:00+02:00","endDate":"2020-12-31T23:59:59+02:00","priority":0,"price":35.50,"curr":"EUR"}'
+```
+
+## Reglas
+- Fechas inclusivas: applicationDate >= START_DATE AND applicationDate <= END_DATE
+- Desempate: PRIORITY DESC → START_DATE DESC ("más reciente") → clave única
+- Instantes absolutos (TIMESTAMP) en BD; ZonedDateTime en API
+- Zona horaria por defecto Europe/Madrid ÚNICAMENTE como respaldo. Se recomienda incluir siempre zona horaria.
+- JaCoCo cobertura mínima 90%
+
+## Base de datos
+
+### Estado actual
+
+**Los tres perfiles usan H2 embebido, y por defecto `jdbc:h2:mem:` es decir EN MEMORIA y SIN PERSISTENCIA.** Los datos se pierden en cada reinicio del proceso; Flyway (V1 crea esquema, V2 inserta los datos de ejemplo) los regenera en cada arranque, por lo que la aplicación queda operativa siempre.
+
+`MODE=PostgreSQL` en la URL **no** significa que haya PostgreSQL detrás: solo le indica a H2 que emule ese dialecto, para que el SQL sea portable cuando se migre. El driver sigue siendo `org.h2.Driver`.
+
+### Cambiar a un motor real (PostgreSQL, Oracle, ...)
+
+El datasource está **externalizado con variables de entorno**, por lo que no hay que tocar código ni los ficheros de perfil:
+
+| Variable | Ejemplo (PostgreSQL) |
+|---|---|
+| `PRICES_DB_URL` | `jdbc:postgresql://localhost:5432/prices` |
+| `PRICES_DB_DRIVER` | `org.postgresql.Driver` |
+| `PRICES_DB_USER` | `prices` |
+| `PRICES_DB_PASSWORD` | `secret` |
+| `PRICES_DB_SCHEMA` | `ZARA` |
+| `PRICES_FLYWAY_LOCATIONS` | `classpath:db/migration` |
+
+```bash
+export SPRING_PROFILES_ACTIVE=pro
+export PRICES_DB_URL='jdbc:postgresql://localhost:5432/prices'
+export PRICES_DB_DRIVER=org.postgresql.Driver
+export PRICES_DB_USER=prices
+export PRICES_DB_PASSWORD=secret
+java -jar target/prices-1.0.0.jar
+```
+
+Con Docker Compose, añade las mismas variables al servicio `prices`.
+
+Requisitos a tener en cuenta:
+
+1. **Driver JDBC**: el proyecto solo incluye H2. Para PostgreSQL u otro motor habría que añadir su driver (y su módulo de Flyway, ya que desde Flyway 10 el soporte de cada motor es un módulo aparte). El enunciado de la prueba no lo requiere.
+2. **Ajustar las migraciones** de `src/main/resources/db/migration` al dialecto del motor. Están escritas para H2: `GENERATED BY DEFAULT AS IDENTITY`, `SET SCHEMA ZARA` y el `INIT=` de la URL son específicos de H2. Se pueden separar por motor con `PRICES_FLYWAY_LOCATIONS`.
+3. **Volumen o almacenamiento gestionado** para garantizar la persistencia entre reinicios.
+
+## Eventos: Kafka
+
+El servicio **publica** `PriceChanged` cuando un precio se crea o se actualiza. No hay ningún consumidor: este repositorio solo produce. Esta pensado para si existe un micro que escucha el topico prices.price-changed.v1 puede obtener los datos y persistirlos en una auditoria o simplemente recuperarlos.
+
+```batch
+kafka-console-consumer.sh --bootstrap-server localhost:29092 --topic prices.price-changed.v1 --from-beginning --max-messages 10
+{"changeType":"CREATED","priceId":5,"brandId":1,"productId":35455,"priceList":5,"priority":0,"price":{"amount":12.34,"currency":"EUR"},"startDate":"2020-12-31T22:00:00","endDate":"2021-01-14T22:00:00","occurredAt":"2026-10-05T17:57:13.573685477Z"}
+{"changeType":"CREATED","priceId":6,"brandId":1,"productId":35455,"priceList":5,"priority":0,"price":{"amount":22.34,"currency":"EUR"},"startDate":"2020-11-30T22:00:00","endDate":"2020-12-14T22:00:00","occurredAt":"2026-10-05T18:02:07.284915350Z"}
+```
+
+
+### Cuándo se emite
+
+La emisión va ligada a las mismas dos ramas que hacen el `save`, así que la idempotencia del `PUT` se traslada sin código extra:
+
+| Caso | ¿Guarda? | ¿Emite? |
+|---|---|---|
+| No existe → CREATE | sí | sí, `changeType: CREATED`, estado previo `null` |
+| Existe y difiere → UPDATE | sí | sí, `changeType: UPDATED`, con estado previo y nuevo |
+| Existe y es idéntico → no-op | **no** | **no** |
+
+### Payload
+
+El evento lleva el **registro persistido tal cual queda en la tabla de precios**, más el estado que tenía antes del cambio. Así el consumidor puede reconstruir la auditoría sin volver a consultar el servicio de precios.
+
+Se serializa con el `ObjectMapper` de la aplicación, así que las fechas salen en ISO-8601 igual que en la API REST. El topic es `prices.price-changed.v1` y la clave del mensaje es el `productId`, para que todos los cambios de un mismo producto caigan en la misma partición y lleguen ordenados.
+
+```json
+{
+  "changeType": "UPDATED",
+  "priceId": 7,
+  "brandId": 1,
+  "productId": 35455,
+  "priceList": 2,
+  "priority": 3,
+  "newPrice": { "amount": 41.75, "currency": "EUR" },
+  "previousPriceList": 1,
+  "previousPriority": 0,
+  "previousPrice": { "amount": 35.50, "currency": "EUR" },
+  "startDate": "2020-06-14T00:00:00",
+  "endDate": "2020-12-31T23:59:59",
+  "occurredAt": "2026-10-05T12:00:00Z"
+}
+```
+
+`priceId` se rellena tras el `save`, por eso solo aparece en el evento. En un `CREATED` los tres campos `previous*` van a `null`.
+
+### Configuración
+
+Externalizada igual que el datasource, sin tocar código:
+
+| Variable | Por defecto | Para qué |
+|---|---|---|
+| `PRICES_KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Broker |
+| `PRICES_KAFKA_TOPIC` | `prices.price-changed.v1` | Topic destino |
+| `PRICES_KAFKA_ENABLED` | `true` | `false` cambia el productor Kafka por un no-op |
+
+El productor se declara tras el port `PriceChangedEventPublisher`, así que la capa de aplicación y el dominio no conocen Kafka. Con `PRICES_KAFKA_ENABLED=false` se inyecta un no-op, que es lo que usan los tests para no depender de un broker.
+
+Para ver los eventos en marcha:
+```bash
+docker compose up --build
+docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 --topic prices.price-changed.v1 --from-beginning
+```
+
+## Docker
+Levanta el servicio y el broker de Kafka (Apache Kafka 3.9 en modo KRaft, sin Zookeeper):
+```bash
+docker compose up --build
+```
+
+| Servicio | Puerto | Para qué |
+|---|---|---|
+| `prices` | 8080 | API de precios, publica `PriceChanged` |
+| `kafka` | 29092 | Broker (PLAIN/PLAINTEXT) |
+
+Para ver los logs y comprobar el estado:
+```bash
+docker compose logs -f prices
+docker compose ps   # prices y kafka deben indicar "healthy"
+```
+
+Para reiniciar en caso de imprevistos como reinicios:
+```bash
+docker compose build --no-cache prices
+docker compose up -d
+```

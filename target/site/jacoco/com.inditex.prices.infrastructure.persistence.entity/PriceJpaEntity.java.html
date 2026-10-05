@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PriceJpaEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">prices</a> &gt; <a href="index.source.html" class="el_package">com.inditex.prices.infrastructure.persistence.entity</a> &gt; <span class="el_source">PriceJpaEntity.java</span></div><h1>PriceJpaEntity.java</h1><pre class="source lang-java linenums">package com.inditex.prices.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;PRICES&quot;, schema = &quot;ZARA&quot;)
+public class PriceJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = &quot;BRAND_ID&quot;, nullable = false)
+    private Integer brandId;
+
+    @Column(name = &quot;PRODUCT_ID&quot;, nullable = false)
+    private Integer productId;
+
+    @Column(name = &quot;PRICE_LIST&quot;, nullable = false)
+    private Integer priceList;
+
+    @Column(name = &quot;START_DATE&quot;, nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = &quot;END_DATE&quot;, nullable = false)
+    private LocalDateTime endDate;
+
+    @Column(name = &quot;PRIORITY&quot;, nullable = false)
+    private Integer priority;
+
+    @Column(name = &quot;PRICE&quot;, nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = &quot;CURR&quot;, nullable = false, length = 3)
+    private String curr;
+
+<span class="fc" id="L38">    public PriceJpaEntity() {}</span>
+<span class="fc" id="L39">    public Long getId() { return id; }</span>
+<span class="fc" id="L40">    public void setId(Long id) { this.id = id; }</span>
+<span class="fc" id="L41">    public Integer getBrandId() { return brandId; }</span>
+<span class="fc" id="L42">    public void setBrandId(Integer brandId) { this.brandId = brandId; }</span>
+<span class="fc" id="L43">    public Integer getProductId() { return productId; }</span>
+<span class="fc" id="L44">    public void setProductId(Integer productId) { this.productId = productId; }</span>
+<span class="fc" id="L45">    public Integer getPriceList() { return priceList; }</span>
+<span class="fc" id="L46">    public void setPriceList(Integer priceList) { this.priceList = priceList; }</span>
+<span class="fc" id="L47">    public LocalDateTime getStartDate() { return startDate; }</span>
+<span class="fc" id="L48">    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }</span>
+<span class="fc" id="L49">    public LocalDateTime getEndDate() { return endDate; }</span>
+<span class="fc" id="L50">    public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }</span>
+<span class="fc" id="L51">    public Integer getPriority() { return priority; }</span>
+<span class="fc" id="L52">    public void setPriority(Integer priority) { this.priority = priority; }</span>
+<span class="fc" id="L53">    public BigDecimal getPrice() { return price; }</span>
+<span class="fc" id="L54">    public void setPrice(BigDecimal price) { this.price = price; }</span>
+<span class="fc" id="L55">    public String getCurr() { return curr; }</span>
+<span class="fc" id="L56">    public void setCurr(String curr) { this.curr = curr; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

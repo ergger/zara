@@ -1,0 +1,16 @@
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/PriceApplicationTests.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/adapter/in/rest/PriceByDateControllerTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/adapter/in/rest/PriceByDateEndpointIntegrationTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/adapter/in/rest/PriceUpsertControllerTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/adapter/in/rest/mapper/PriceRestMapperTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/application/mapper/PriceApplicationMapperTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/application/usecase/GetPriceByDateUseCaseTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/application/usecase/UpsertPriceUseCaseTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/domain/model/DateRangeTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/domain/model/MoneyTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/domain/model/PriceChangedEventTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/domain/model/PriceTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/infrastructure/config/LoggingTimeZoneTests.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/infrastructure/exception/GlobalExceptionHandlerTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/infrastructure/messaging/KafkaPriceChangedEventPublisherTest.java
+/home/heidergger.new/repo/Update/inditex/prices/src/test/java/com/inditex/prices/infrastructure/persistence/adapter/PriceRepositoryAdapterTest.java

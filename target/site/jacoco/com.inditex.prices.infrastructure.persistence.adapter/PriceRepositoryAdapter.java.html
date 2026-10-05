@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PriceRepositoryAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">prices</a> &gt; <a href="index.source.html" class="el_package">com.inditex.prices.infrastructure.persistence.adapter</a> &gt; <span class="el_source">PriceRepositoryAdapter.java</span></div><h1>PriceRepositoryAdapter.java</h1><pre class="source lang-java linenums">package com.inditex.prices.infrastructure.persistence.adapter;
+
+import com.inditex.prices.domain.model.Money;
+import com.inditex.prices.domain.model.Price;
+import com.inditex.prices.domain.port.out.PriceRepositoryPort;
+import com.inditex.prices.infrastructure.persistence.entity.PriceJpaEntity;
+import com.inditex.prices.infrastructure.persistence.repository.PriceJpaRepository;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Component
+public class PriceRepositoryAdapter implements PriceRepositoryPort {
+
+    private final PriceJpaRepository priceJpaRepository;
+
+<span class="fc" id="L18">    public PriceRepositoryAdapter(PriceJpaRepository priceJpaRepository) {</span>
+<span class="fc" id="L19">        this.priceJpaRepository = priceJpaRepository;</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public Optional&lt;Price&gt; findApplicablePrice(Integer productId, Integer brandId, LocalDateTime applicationDate) {
+<span class="fc" id="L24">        return priceJpaRepository.findApplicablePrice(productId, brandId, applicationDate)</span>
+<span class="fc" id="L25">                .map(this::toDomain);</span>
+    }
+
+    @Override
+    public Optional&lt;Price&gt; findByNaturalKey(Integer brandId, Integer productId, LocalDateTime startDate, LocalDateTime endDate) {
+<span class="fc" id="L30">        return priceJpaRepository.findByBrandIdAndProductIdAndStartDateAndEndDate(brandId, productId, startDate, endDate)</span>
+<span class="fc" id="L31">                .map(this::toDomain);</span>
+    }
+
+    @Override
+    public Price save(Price price) {
+<span class="fc" id="L36">        PriceJpaEntity entity = toEntity(price);</span>
+<span class="fc" id="L37">        PriceJpaEntity saved = priceJpaRepository.save(entity);</span>
+<span class="fc" id="L38">        return toDomain(saved);</span>
+    }
+
+    private Price toDomain(PriceJpaEntity entity) {
+<span class="fc" id="L42">        return new Price(</span>
+<span class="fc" id="L43">                entity.getId(),</span>
+<span class="fc" id="L44">                entity.getBrandId(),</span>
+<span class="fc" id="L45">                entity.getProductId(),</span>
+<span class="fc" id="L46">                entity.getPriceList(),</span>
+<span class="fc" id="L47">                entity.getStartDate(),</span>
+<span class="fc" id="L48">                entity.getEndDate(),</span>
+<span class="fc" id="L49">                entity.getPriority(),</span>
+<span class="fc" id="L50">                new Money(entity.getPrice(), entity.getCurr())</span>
+        );
+    }
+
+    private PriceJpaEntity toEntity(Price price) {
+<span class="fc" id="L55">        PriceJpaEntity entity = new PriceJpaEntity();</span>
+<span class="fc" id="L56">        entity.setId(price.id());</span>
+<span class="fc" id="L57">        entity.setBrandId(price.brandId());</span>
+<span class="fc" id="L58">        entity.setProductId(price.productId());</span>
+<span class="fc" id="L59">        entity.setPriceList(price.priceList());</span>
+<span class="fc" id="L60">        entity.setStartDate(price.startDate());</span>
+<span class="fc" id="L61">        entity.setEndDate(price.endDate());</span>
+<span class="fc" id="L62">        entity.setPriority(price.priority());</span>
+<span class="fc" id="L63">        entity.setPrice(price.money().amount());</span>
+<span class="fc" id="L64">        entity.setCurr(price.money().currency());</span>
+<span class="fc" id="L65">        return entity;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

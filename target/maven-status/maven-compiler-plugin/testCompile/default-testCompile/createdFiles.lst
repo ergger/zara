@@ -1,0 +1,17 @@
+com/inditex/prices/adapter/in/rest/mapper/PriceRestMapperTest.class
+com/inditex/prices/PriceApplicationTests.class
+com/inditex/prices/domain/model/MoneyTest.class
+com/inditex/prices/infrastructure/exception/GlobalExceptionHandlerTest$1.class
+com/inditex/prices/adapter/in/rest/PriceByDateControllerTest.class
+com/inditex/prices/infrastructure/persistence/adapter/PriceRepositoryAdapterTest.class
+com/inditex/prices/infrastructure/config/LoggingTimeZoneTests.class
+com/inditex/prices/infrastructure/messaging/KafkaPriceChangedEventPublisherTest.class
+com/inditex/prices/domain/model/PriceChangedEventTest.class
+com/inditex/prices/adapter/in/rest/PriceByDateEndpointIntegrationTest.class
+com/inditex/prices/application/mapper/PriceApplicationMapperTest.class
+com/inditex/prices/domain/model/DateRangeTest.class
+com/inditex/prices/domain/model/PriceTest.class
+com/inditex/prices/application/usecase/UpsertPriceUseCaseTest.class
+com/inditex/prices/adapter/in/rest/PriceUpsertControllerTest.class
+com/inditex/prices/infrastructure/exception/GlobalExceptionHandlerTest.class
+com/inditex/prices/application/usecase/GetPriceByDateUseCaseTest.class

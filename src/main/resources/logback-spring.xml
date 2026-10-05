@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+<!--
+      Cada timestamp lleva su offset numerico (flag XXX, p. ej. +02:00), de modo
+      que la zona se lee en la propia linea y no hay que deducirla:
+
+        2026-10-05 02:16:39.302+02:00 INFO [...] - mensaje
+
+      No se fija la zona aqui a proposito: %d sin zona explicita usa la zona por
+      defecto de la JVM, que es la que determina la variable de entorno TZ. Una
+      sola fuente de verdad; el offset impreso es siempre el real.
+    -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSSXXX} %-5level [%thread] %logger{36} - %msg%n"/>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
