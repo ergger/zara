@@ -37,16 +37,9 @@ además de lógica de negocio, así que `@Getter` no aportaría nada.
 `Money` en dos campos (`amount` y `currency`), algo que MapStruct no resuelve
 bien. Ahí se prefirió el código explícito.
 
-### DTOs duplicados por capa
-
-`PriceByDateRestRequest` y `PriceByDateRequest` son clases distintas a propósito.
-Permite que el contrato REST cambie (por ejemplo, aceptar un `LocalDateTime`
-en vez de `ZonedDateTime`) sin arrastrar a la capa de aplicación. Es más
-código, a cambio de desacoplamiento.
-
 ## Build & Test
 ```bash
-mvn clean verify
+mvn clean install
 ```
 
 ## Ejecutar localmente
@@ -68,7 +61,7 @@ Parámetros:
 - productId (Integer)
 - applicationDate (ZonedDateTime, ISO-8601). La zona es obligatoria; no hay zona por defecto.
 
-**Ojo con el `+` del offset en una query string**: un `+` literal se decodifica como espacio, así que `2020-06-14T10:00:00+02:00` falla con 400. Usa el designador `Z` de UTC o codifica el `+` como `%2B`.
+**Tener en cuenta el `+` del offset en una query string**: un `+` literal se decodifica como espacio, así que `2020-06-14T10:00:00+02:00` falla con 400. Usa el designador `Z` de UTC o codifica el `+` como `%2B`.
 
 Ejemplos válidos:
 ```bash
@@ -154,7 +147,7 @@ La emisión va ligada a las mismas dos ramas que hacen el `save`, así que la id
 
 ### Payload
 
-El evento lleva el **registro persistido tal cual queda en la tabla de precios**, más el estado que tenía antes del cambio. Así el consumidor puede reconstruir la auditoría sin volver a consultar el servicio de precios.
+El evento lleva el **registro persistido tal cual queda en la tabla de precios**. Así el consumidor puede reconstruir la auditoría sin volver a consultar el servicio de precios.
 
 Se serializa con el `ObjectMapper` de la aplicación, así que las fechas salen en ISO-8601 igual que en la API REST. El topic es `prices.price-changed.v1` y la clave del mensaje es el `productId`, para que todos los cambios de un mismo producto caigan en la misma partición y lleguen ordenados.
 
@@ -166,10 +159,7 @@ Se serializa con el `ObjectMapper` de la aplicación, así que las fechas salen 
   "productId": 35455,
   "priceList": 2,
   "priority": 3,
-  "newPrice": { "amount": 41.75, "currency": "EUR" },
-  "previousPriceList": 1,
-  "previousPriority": 0,
-  "previousPrice": { "amount": 35.50, "currency": "EUR" },
+  "price": { "amount": 41.75, "currency": "EUR" },
   "startDate": "2020-06-14T00:00:00",
   "endDate": "2020-12-31T23:59:59",
   "occurredAt": "2026-10-05T12:00:00Z"
